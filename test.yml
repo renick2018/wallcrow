@@ -1,0 +1,20 @@
+api_salt: Allen Yeager
+api_expire: 10000
+emails:
+  - liucaoping@doodod.com
+email_server:
+  sender: 'xxx@mail.com'
+  password: 'xxx'
+  host: 'smtp.qq.com'
+  port: 465
+
+mysql_conf:
+  user: 'root'
+  password: '123456'
+  host: 'localhost'
+  port: 3306
+
+redis_conf:
+  password:
+  host: 'localhost'
+  port: 6379
