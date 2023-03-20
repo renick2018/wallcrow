@@ -25,6 +25,7 @@ func Init() *gin.Engine {
 }
 
 func Routers(e *gin.Engine) {
+	e.POST("/ask", chatroom{}.ask) // 询问
 	var openai = e.Group("/openai")
 	{
 		// account

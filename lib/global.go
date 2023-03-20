@@ -18,6 +18,7 @@ var Rds *redis.Client
 
 var Global struct {
 	ApiProxyHost string   `yaml:"api_proxy_host"`
+	ApiProxyHostTs string `yaml:"api_proxy_host_ts"`
 	ApiSalt      string   `yaml:"api_salt"`
 	ApiExpire    int64    `yaml:"api_expire"`
 	Emails       []string `yaml:"emails"` // alert emails

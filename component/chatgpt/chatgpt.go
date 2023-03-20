@@ -36,10 +36,11 @@ type Response struct {
 		Message string      `json:"message"`
 		Type    string      `json:"type"`
 		Param   interface{} `json:"param"`
-		Code    *string `json:"code"`
+		Code    *string     `json:"code"`
 	} `json:"error"`
 
-	Status string `json:"status"`
+	Status    string `json:"status"`
+	MessageId string `json:"message_id"`
 }
 
 /**
@@ -56,7 +57,7 @@ curl https://api.openai.com/v1/chat/completions \
 */
 
 func ask(conv *model.Conversation, apikey string) (*Response, error) {
-	url := "https://api.openai.com/v1/chat/completions"  // POST 请求的目标 URL
+	url := "https://api.openai.com/v1/chat/completions" // POST 请求的目标 URL
 
 	if len(lib.Global.ApiProxyHost) > 0 {
 		url = fmt.Sprintf("%s/v1/chat/completions", lib.Global.ApiProxyHost)
@@ -68,6 +69,41 @@ func ask(conv *model.Conversation, apikey string) (*Response, error) {
 
 	client := &http.Client{Timeout: 2 * time.Minute}
 	logger.Info(fmt.Sprintf("HTTP Request Body: %+v", string(conv.ToParams())))
+	resp, err := client.Do(req) // 发送请求
+	if err != nil {
+		logger.Warning(fmt.Sprintf("Error sending HTTP request: %+v", err))
+		return nil, err
+	}
+
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
+	logger.Info(fmt.Sprintf("HTTP Response Status: %+v", resp.Status))
+
+	// 读取响应体
+	buf := new(bytes.Buffer)
+	_, _ = buf.ReadFrom(resp.Body)
+	logger.Info(fmt.Sprintf("HTTP Response Body:: %+v", buf.String()))
+
+	var rsp Response
+	err = json.Unmarshal(buf.Bytes(), &rsp)
+	rsp.Status = resp.Status
+
+	return &rsp, err
+}
+
+func askTs(message, messageId string, apikey string) (*Response, error) {
+	url := lib.Global.ApiProxyHostTs + "/ask"
+	data := make(map[string]interface{})
+	data["message"] = message
+	data["messageId"] = messageId
+	data["apikey"] = apikey
+	bs, _ := json.Marshal(data)
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(bs))
+
+	client := &http.Client{Timeout: 2 * time.Minute}
+	logger.Info(fmt.Sprintf("HTTP Request Body: %+v", string(bs)))
 	resp, err := client.Do(req) // 发送请求
 	if err != nil {
 		logger.Warning(fmt.Sprintf("Error sending HTTP request: %+v", err))
