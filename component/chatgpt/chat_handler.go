@@ -137,16 +137,19 @@ func askByProxy(conv *model.Conversation, message, apikey string) (*Response, er
 	logger.Info(fmt.Sprintf("find messages: %d\n%+v", len(messages), messages))
 
 	var tokens = 0
-	var index = len(messages) - 1
-	for i := index; i >= 0; i-- {
+	for i := len(messages) - 1; i >= 0; i-- {
 		var item = messages[i]
 		//logger.Debug(fmt.Sprintf("token %d, cut: %d, index: %d, messages: %d, %s", tokens, conv.MaxTokens-conv.MaxResponseTokens, i, item.Tokens, item.Content))
+		tokens += item.Tokens
 		if tokens >= conv.MaxTokens-conv.MaxResponseTokens {
-			index = i
+			tokens -= item.Tokens
 			break
 		}
-		tokens += item.Tokens
 		conv.Messages = append([]model.Message{item}, conv.Messages...)
+	}
+
+	if len(conv.Messages) > 0 && conv.Messages[0].Role == model.Assistant {
+		conv.Messages = conv.Messages[1:]
 	}
 
 	conv.Tokens = tokens
